@@ -100,14 +100,19 @@ npx wrangler deploy
 4. **Application Configuration**:
    - Application name: `WebSocket Admin`
    - Session Duration: 依需求設定 (例如 24 hours)
-   - Application domain: 填入您剛才發佈的 Worker 網域 (例如 `websocket-relay.<your-domain>.workers.dev`)，並且 **Path** 請務必填入 `admin`。
+   - Application domain: 填入您剛才發佈的 Worker 網域 (例如 `websocket-relay.<your-domain>.workers.dev`)。
+   - **Path**: 請務必填入 `admin`。
 5. **Add policies**:
    - 建立一個 Policy (例如 `Allow Admins`)
    - Action 選擇 `Allow`。
    - 在 **Include** 規則中，選擇 `Emails` 並填寫您與其他管理員的 Email 信箱 (或者使用 `Email endings` 讓特定公司網域通過)。
 6. 儲存並套用。
+7. **(非常重要) 保護 API 端點**:
+   - 由於前端網頁會呼叫 `/api/users`，如果只保護 `/admin`，有心人士仍可直接戳 API。
+   - 請在建立好 `admin` 應用程式後，再次點擊 **"Add an application"**，用**一模一樣的設定方式**，將 **Path** 填入 `api` 並綁定相同的 Policy。
+   - 這樣一來，無論是介面還是背後的 `/api/*` 都會完美的被阻擋在同一個 Zero Trust 登入牆後。
 
-設定完成後，當任何人試圖存取 `https://<您的網址>/admin` 時，都會先被攔截到一個登入畫面，必須輸入您所指定的 Email 收取一次性登入碼 (OTP) 才能夠進入後台。
+設定完成後，當任何人試圖存取 `https://<您的網址>/admin` 或 API 時，都會被要求登入並驗證 OTP。
 
 ## 注意事項
 
