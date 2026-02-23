@@ -1,3 +1,5 @@
+import { getMockKv } from '../../utils/getMockKv';
+
 export default defineEventHandler(async (event) => {
   const id = getRouterParam(event, 'id');
   
@@ -10,8 +12,8 @@ export default defineEventHandler(async (event) => {
 
   if (!kvStore) {
     if (process.dev) {
-      console.warn('[DEV] Cloudflare KV (RELAY_AUTH_STORE) 未綁定！Mock 模式下略過刪除。');
-      return { success: true, mocked: true };
+      console.warn('[DEV] Cloudflare KV (RELAY_AUTH_STORE) 未綁定！Mock 模式下進行記憶體刪除。');
+      kvStore = getMockKv();
     } else {
       throw createError({ statusCode: 500, statusMessage: "KV Store binding (RELAY_AUTH_STORE) is missing in production" });
     }

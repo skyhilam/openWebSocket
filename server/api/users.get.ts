@@ -1,14 +1,13 @@
+import { getMockKv } from '../utils/getMockKv';
+
 export default defineEventHandler(async (event) => {
   const cloudflare = event.context.cloudflare;
   let kvStore = cloudflare?.env?.RELAY_AUTH_STORE;
 
   if (!kvStore) {
     if (process.dev) {
-      console.warn('[DEV] Cloudflare KV (RELAY_AUTH_STORE) 未綁定！回傳空列表（Mock 模式無法查詢 Keys）。');
-      return {
-        totalActive: 0,
-        users: []
-      };
+      console.warn('[DEV] Cloudflare KV (RELAY_AUTH_STORE) 未綁定！回傳記憶體 Mock 列表。');
+      kvStore = getMockKv();
     } else {
       throw createError({ statusCode: 500, statusMessage: "KV Store binding (RELAY_AUTH_STORE) is missing in production" });
     }
@@ -22,7 +21,7 @@ export default defineEventHandler(async (event) => {
     // 若數量不大，直接解析出內容 (附帶建立時間等)
     // 注意：Cloudflare KV list 最多回傳 1000 筆，如需分頁可加上 cursor 處理
     const users = await Promise.all(
-      keys.map(async (keyObj) => {
+      keys.map(async (keyObj: any) => {
         const id = keyObj.name.replace('user:', '');
         const valStr = await kvStore.get(keyObj.name);
         
