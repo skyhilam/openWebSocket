@@ -1,17 +1,22 @@
 {
-  "name": "websocket-relay",
-  "version": "1.0.0",
-  "description": "WebSocket Relay Worker using Durable Objects",
-  "main": "src/index.ts",
+  "name": "websocket",
+  "type": "module",
+  "private": true,
   "scripts": {
-    "dev": "wrangler dev",
-    "deploy": "wrangler deploy"
+    "build": "nuxt build",
+    "dev": "nuxt dev",
+    "generate": "nuxt generate",
+    "preview": "nuxt preview",
+    "postinstall": "nuxt prepare"
+  },
+  "dependencies": {
+    "nuxt": "^4.3.1",
+    "vue": "^3.5.28",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20240529.0",
-    "@types/ws": "^8.18.1",
-    "typescript": "^5.0.4",
-    "wrangler": "^3.0.0",
-    "ws": "^8.19.0"
+    "@cloudflare/workers-types": "^4.20260302.0",
+    "@nuxt/ui": "^4.4.0",
+    "wrangler": "^4.67.0"
   }
 }

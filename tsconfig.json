@@ -1,17 +1,18 @@
 {
-  "compilerOptions": {
-    "target": "es2022",
-    "module": "es2022",
-    "lib": ["es2022"],
-    "types": ["@cloudflare/workers-types"],
-    "moduleResolution": "Bundler",
-    "strict": true,
-    "preserveConstEnums": true,
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "noEmit": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*.ts"]
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "files": [],
+  "references": [
+    {
+      "path": "./.nuxt/tsconfig.app.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.server.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.shared.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.node.json"
+    }
+  ]
 }

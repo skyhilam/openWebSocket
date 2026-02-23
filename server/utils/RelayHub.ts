@@ -1,26 +1,32 @@
-import { DurableObject } from "cloudflare:workers";
+/// <reference types="@cloudflare/workers-types" />
 
 export interface Env {
-  RELAY_HUB: DurableObjectNamespace;
   RELAY_AUTH_STORE: KVNamespace;
+  RELAY_HUB: DurableObjectNamespace;
 }
 
-export class RelayHub extends DurableObject<Env> {
-  private hostSession: WebSocket | null = null;
-  private clientSessions: Set<WebSocket> = new Set();
+export class RelayHub {
+  state: DurableObjectState;
+  env: Env;
+  clientSessions: Set<WebSocket>;
+  hostSession: WebSocket | null;
 
-  constructor(ctx: DurableObjectState, env: Env) {
-    super(ctx, env);
+  constructor(state: DurableObjectState, env: Env) {
+    this.state = state;
+    this.env = env;
+    this.clientSessions = new Set();
+    this.hostSession = null;
   }
 
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
-    const role = url.searchParams.get("role"); // 'host' or 'client'
+    const role = url.searchParams.get("role");
 
     if (request.headers.get("Upgrade") !== "websocket") {
       return new Response("Expected Upgrade: websocket", { status: 426 });
     }
 
+    // @ts-ignore - Cloudflare Workers feature
     const { 0: clientToken, 1: serverToken } = new WebSocketPair();
 
     if (role === "host") {
@@ -38,27 +44,22 @@ export class RelayHub extends DurableObject<Env> {
   }
 
   private handleHostConnection(ws: WebSocket) {
+    // @ts-ignore
     ws.accept();
     
-    // 清除舊的連線，確保單點更新。
     if (this.hostSession) {
       try {
         this.hostSession.close(1000, "New host connected");
-      } catch (err) {
-        // 忽略可能已關閉的錯誤
-      }
+      } catch (err) {}
     }
     
     this.hostSession = ws;
 
     ws.addEventListener("message", (msg) => {
-      // 收到 host 來的訊息，廣播給所有 clients
       for (const client of this.clientSessions) {
         try {
           client.send(msg.data);
-        } catch (err) {
-          // 網路等問題，依賴接下來的 close / error 清除
-        }
+        } catch (err) {}
       }
     });
 
@@ -76,17 +77,15 @@ export class RelayHub extends DurableObject<Env> {
   }
 
   private handleClientConnection(ws: WebSocket) {
+    // @ts-ignore
     ws.accept();
     this.clientSessions.add(ws);
 
     ws.addEventListener("message", (msg) => {
-      // 收到 client 來的訊息，轉發給 host
       if (this.hostSession) {
         try {
           this.hostSession.send(msg.data);
-        } catch (err) {
-          // 忽略
-        }
+        } catch (err) {}
       }
     });
 
