@@ -339,7 +339,8 @@ async function generateUser() {
 async function fetchUsers() {
   loadingUsers.value = true;
   try {
-    const res = await fetch("/api/users");
+    // 加上時間戳以避免瀏覽器對 GET request 的無條件快取
+    const res = await fetch(`/api/users?t=${Date.now()}`);
     if (res.ok) {
       usersData.value = await res.json();
     }
@@ -366,12 +367,19 @@ async function deleteUser(id: string) {
       icon: "i-lucide-trash-2",
     });
 
-    // 如果刪除的剛好是剛建立正在顯示的那個，就清空上方顯示
+    // 清空上方卡片檢視如果剛好是該筆
     if (result.value?.userId === id) {
       result.value = null;
     }
 
-    fetchUsers();
+    // [Optimistic Update] 立即從畫面上移除，不需要等 fetch 回來，避免畫面卡頓
+    if (usersData.value) {
+      usersData.value.users = usersData.value.users.filter((u) => u.id !== id);
+      usersData.value.totalActive = usersData.value.users.length;
+    }
+
+    // 隨後在背景拉取最新狀態確保同步
+    await fetchUsers();
   } catch (e: any) {
     toast.add({
       title: "刪除失敗",
