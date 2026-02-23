@@ -1,0 +1,17 @@
+{
+  "name": "websocket-relay",
+  "version": "1.0.0",
+  "description": "WebSocket Relay Worker using Durable Objects",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240529.0",
+    "@types/ws": "^8.18.1",
+    "typescript": "^5.0.4",
+    "wrangler": "^3.0.0",
+    "ws": "^8.19.0"
+  }
+}
