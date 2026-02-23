@@ -90,6 +90,25 @@ npx wrangler deploy
 執行完畢後，Wrangler 會自動為您註冊 `RelayHub` (Durable Object) 並分配一個類似 `https://websocket-relay.<user>.workers.dev` 的線上網址。
 開啟該網址下的 `/admin`，即可開始建立並管理您的專屬通訊房間！
 
+### 4. 設定 Cloudflare Zero Trust 保護 (重要)
+
+為了避免任何人都能隨意拜訪您的 `/admin` 介面亂開房間，我們強烈建議將此路徑加入 Cloudflare Zero Trust (Access) 保護：
+
+1. 登入 Cloudflare Dashboard，進入您的帳戶。
+2. 點擊側邊欄的 **Zero Trust** -> 左側選單選擇 **Access** -> **Applications**。
+3. 點擊 **"Add an application"**，選擇 **Self-hosted**。
+4. **Application Configuration**:
+   - Application name: `WebSocket Admin`
+   - Session Duration: 依需求設定 (例如 24 hours)
+   - Application domain: 填入您剛才發佈的 Worker 網域 (例如 `websocket-relay.<your-domain>.workers.dev`)，並且 **Path** 請務必填入 `admin`。
+5. **Add policies**:
+   - 建立一個 Policy (例如 `Allow Admins`)
+   - Action 選擇 `Allow`。
+   - 在 **Include** 規則中，選擇 `Emails` 並填寫您與其他管理員的 Email 信箱 (或者使用 `Email endings` 讓特定公司網域通過)。
+6. 儲存並套用。
+
+設定完成後，當任何人試圖存取 `https://<您的網址>/admin` 時，都會先被攔截到一個登入畫面，必須輸入您所指定的 Email 收取一次性登入碼 (OTP) 才能夠進入後台。
+
 ## 注意事項
 
 - 本專案沒有實體資料庫，權限管控依靠 **Cloudflare KV** 作 Token 驗證。
