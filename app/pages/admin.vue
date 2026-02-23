@@ -1,177 +1,178 @@
 <template>
   <div>
     <ClientOnly>
-      <UContainer class="py-12 max-w-3xl">
-        <div class="space-y-8">
-          <!-- Header Area -->
-          <div class="text-center space-y-4">
-            <UIcon
-              name="i-lucide-server-cog"
-              class="w-16 h-16 text-primary mx-auto"
-            />
-            <h1
-              class="text-4xl font-extrabold tracking-tight text-neutral-900 dark:text-white"
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
+        <!-- Page Header -->
+        <div class="md:flex md:items-center md:justify-between mb-8">
+          <div class="min-w-0 flex-1">
+            <h2
+              class="text-2xl font-bold leading-7 text-neutral-900 dark:text-white sm:truncate sm:text-3xl sm:tracking-tight"
             >
-              多租戶 WebSocket 註冊中心
-            </h1>
-            <p
-              class="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto"
-            >
-              建立您的專屬連線身份。為了確保物理隔離與通訊安全，每個身份將透過
-              Nitro 分配至 Cloudflare 邊緣網路中獨立的房間。
+              WebSocket 實體管理
+            </h2>
+            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+              在此配置與管理隔離的 WebSocket 連線房間。所有連線將直接在
+              Cloudflare 邊緣節點處理。
             </p>
           </div>
-
-          <!-- Main Actions Card -->
-          <UCard
-            class="shadow-xl ring-1 ring-neutral-200 dark:ring-neutral-800"
-          >
-            <div class="flex flex-col items-center justify-center py-4 sm:py-8">
-              <UButton
-                size="xl"
-                :loading="loading"
-                @click="generateUser"
-                icon="i-lucide-zap"
-                color="primary"
-                class="w-full sm:w-auto font-semibold text-lg px-8 shadow-lg transition-transform active:scale-95"
-              >
-                {{ loading ? "正在分配邊緣運算資源..." : "建立新使用者實體" }}
-              </UButton>
-              <p class="mt-4 text-sm text-neutral-500">
-                點擊後將透過 API 向 Cloudflare KV 寫入憑證並建立分配房間。
-              </p>
-            </div>
-
-            <!-- Error State -->
-            <Transition
-              enter-active-class="transition duration-500 ease-out"
-              enter-from-class="transform scale-95 opacity-0 translate-y-4"
-              enter-to-class="transform scale-100 opacity-100 translate-y-0"
-              leave-active-class="transition duration-300 ease-in"
-              leave-from-class="transform scale-100 opacity-100"
-              leave-to-class="transform scale-95 opacity-0"
+          <div class="mt-4 flex md:ml-4 md:mt-0">
+            <UButton
+              :loading="loading"
+              @click="generateUser"
+              icon="i-lucide-plus"
+              color="neutral"
+              variant="solid"
             >
-              <div v-if="errorMsg" class="mt-6">
-                <UAlert
-                  icon="i-lucide-alert-triangle"
-                  color="error"
-                  variant="soft"
-                  title="建立失敗"
-                  :description="errorMsg"
-                />
-              </div>
-            </Transition>
-
-            <!-- Success State & Details -->
-            <Transition
-              enter-active-class="transition duration-700 ease-out"
-              enter-from-class="transform opacity-0 translate-y-8"
-              enter-to-class="transform opacity-100 translate-y-0"
-              leave-active-class="transition duration-300 ease-in"
-              leave-from-class="transform opacity-100"
-              leave-to-class="transform opacity-0"
-            >
-              <div
-                v-if="result"
-                class="mt-8 space-y-6 pt-8 border-t border-neutral-200 dark:border-neutral-800"
-              >
-                <div class="flex items-center gap-3 mb-6">
-                  <span
-                    class="flex items-center justify-center w-8 h-8 rounded-full bg-success/10 text-success"
-                  >
-                    <UIcon name="i-lucide-check" class="w-5 h-5" />
-                  </span>
-                  <h3
-                    class="text-xl font-semibold text-neutral-900 dark:text-white"
-                  >
-                    資源配置成功
-                  </h3>
-                </div>
-
-                <!-- Credentials Grid -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <UFormField label="房間 ID (User ID)">
-                    <UInput
-                      :model-value="result.userId"
-                      readonly
-                      icon="i-lucide-fingerprint"
-                      class="font-mono text-sm"
-                      :ui="{
-                        base: 'bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700',
-                      }"
-                    />
-                  </UFormField>
-                  <UFormField label="對稱式金鑰 (Token)">
-                    <UInput
-                      :model-value="result.token"
-                      readonly
-                      type="password"
-                      icon="i-lucide-key-round"
-                      class="font-mono text-sm"
-                      :ui="{
-                        base: 'bg-neutral-50 dark:bg-neutral-900 border-neutral-300 dark:border-neutral-700',
-                      }"
-                    />
-                  </UFormField>
-                </div>
-
-                <!-- Endpoint Connections -->
-                <div
-                  class="space-y-4 mt-8 bg-neutral-50 dark:bg-neutral-900/50 p-6 rounded-xl border border-neutral-200 dark:border-neutral-800"
-                >
-                  <h4
-                    class="font-medium text-sm text-neutral-700 dark:text-neutral-300 mb-2 flex items-center gap-2"
-                  >
-                    <UIcon name="i-lucide-link" class="w-4 h-4" /> 對接端點配置
-                  </h4>
-
-                  <div class="space-y-4">
-                    <UFormField label="Host (主機端 / Docker 端)">
-                      <div class="flex gap-2">
-                        <UInput
-                          :model-value="result.hostUrl"
-                          readonly
-                          icon="i-lucide-server"
-                          class="font-mono text-xs flex-1"
-                        />
-                        <UButton
-                          color="neutral"
-                          variant="soft"
-                          icon="i-lucide-copy"
-                          class="shrink-0"
-                          @click="copyText(result.hostUrl)"
-                        >
-                          複製
-                        </UButton>
-                      </div>
-                    </UFormField>
-
-                    <UFormField label="Client (客戶端 / 雲端)">
-                      <div class="flex gap-2">
-                        <UInput
-                          :model-value="result.clientUrl"
-                          readonly
-                          icon="i-lucide-monitor-smartphone"
-                          class="font-mono text-xs flex-1"
-                        />
-                        <UButton
-                          color="neutral"
-                          variant="soft"
-                          icon="i-lucide-copy"
-                          class="shrink-0"
-                          @click="copyText(result.clientUrl)"
-                        >
-                          複製
-                        </UButton>
-                      </div>
-                    </UFormField>
-                  </div>
-                </div>
-              </div>
-            </Transition>
-          </UCard>
+              建立新實體
+            </UButton>
+          </div>
         </div>
-      </UContainer>
+
+        <!-- Error Alert -->
+        <div v-if="errorMsg" class="mb-6">
+          <UAlert
+            icon="i-lucide-alert-circle"
+            color="error"
+            variant="subtle"
+            title="建立失敗"
+            :description="errorMsg"
+          />
+        </div>
+
+        <!-- Result Section -->
+        <div
+          v-if="result"
+          class="bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 sm:rounded-lg overflow-hidden"
+        >
+          <div
+            class="px-4 py-5 sm:px-6 border-b border-neutral-200 dark:border-neutral-800 flex justify-between items-center"
+          >
+            <h3
+              class="text-base font-semibold leading-6 text-neutral-900 dark:text-white"
+            >
+              實體配置資訊
+            </h3>
+            <span
+              class="inline-flex items-center rounded-md bg-green-50 px-2 py-1 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20 dark:bg-green-500/10 dark:text-green-400 dark:ring-green-500/20"
+              >配置成功</span
+            >
+          </div>
+          <div
+            class="border-t border-neutral-200 dark:border-neutral-800 px-4 py-5 sm:p-0"
+          >
+            <dl
+              class="sm:divide-y sm:divide-neutral-200 dark:sm:divide-neutral-800"
+            >
+              <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt
+                  class="text-sm font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-2"
+                >
+                  <UIcon name="i-lucide-fingerprint" class="w-4 h-4" /> 房間 ID
+                </dt>
+                <dd
+                  class="mt-1 text-sm text-neutral-900 dark:text-white sm:col-span-2 sm:mt-0 font-mono"
+                >
+                  {{ result.userId }}
+                </dd>
+              </div>
+
+              <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt
+                  class="text-sm font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-2"
+                >
+                  <UIcon name="i-lucide-key" class="w-4 h-4" /> 存取金鑰
+                </dt>
+                <dd
+                  class="mt-1 text-sm text-neutral-900 dark:text-white sm:col-span-2 sm:mt-0 font-mono"
+                >
+                  {{ result.token }}
+                </dd>
+              </div>
+
+              <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt
+                  class="text-sm font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-2"
+                >
+                  <UIcon name="i-lucide-server" class="w-4 h-4" /> 對接端點
+                  (Host)
+                </dt>
+                <dd
+                  class="mt-1 text-sm text-neutral-900 dark:text-white sm:col-span-2 sm:mt-0"
+                >
+                  <div class="flex rounded-md shadow-sm">
+                    <input
+                      readonly
+                      :value="result.hostUrl"
+                      class="block w-full min-w-0 flex-1 rounded-none rounded-l-md border-0 py-1.5 px-3 text-neutral-900 ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-neutral-600 sm:text-sm sm:leading-6 dark:bg-neutral-800 dark:text-white dark:ring-neutral-700 bg-neutral-50 font-mono"
+                    />
+                    <button
+                      @click="copyText(result.hostUrl)"
+                      type="button"
+                      class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-sm font-semibold text-neutral-900 ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 dark:bg-neutral-800 dark:text-white dark:ring-neutral-700 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                    >
+                      <UIcon
+                        name="i-lucide-copy"
+                        class="-ml-0.5 h-4 w-4 text-neutral-400"
+                      />
+                      複製
+                    </button>
+                  </div>
+                </dd>
+              </div>
+
+              <div class="py-4 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-6">
+                <dt
+                  class="text-sm font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-2"
+                >
+                  <UIcon name="i-lucide-monitor-smartphone" class="w-4 h-4" />
+                  對接端點 (Client)
+                </dt>
+                <dd
+                  class="mt-1 text-sm text-neutral-900 dark:text-white sm:col-span-2 sm:mt-0"
+                >
+                  <div class="flex rounded-md shadow-sm">
+                    <input
+                      readonly
+                      :value="result.clientUrl"
+                      class="block w-full min-w-0 flex-1 rounded-none rounded-l-md border-0 py-1.5 px-3 text-neutral-900 ring-1 ring-inset ring-neutral-300 placeholder:text-neutral-400 focus:ring-2 focus:ring-inset focus:ring-neutral-600 sm:text-sm sm:leading-6 dark:bg-neutral-800 dark:text-white dark:ring-neutral-700 bg-neutral-50 font-mono"
+                    />
+                    <button
+                      @click="copyText(result.clientUrl)"
+                      type="button"
+                      class="relative -ml-px inline-flex items-center gap-x-1.5 rounded-r-md px-3 py-2 text-sm font-semibold text-neutral-900 ring-1 ring-inset ring-neutral-300 hover:bg-neutral-50 dark:bg-neutral-800 dark:text-white dark:ring-neutral-700 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
+                    >
+                      <UIcon
+                        name="i-lucide-copy"
+                        class="-ml-0.5 h-4 w-4 text-neutral-400"
+                      />
+                      複製
+                    </button>
+                  </div>
+                </dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div
+          v-else-if="!loading && !errorMsg"
+          class="text-center bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 sm:rounded-lg px-6 py-14 mt-6"
+        >
+          <UIcon
+            name="i-lucide-server"
+            class="mx-auto h-12 w-12 text-neutral-300 dark:text-neutral-600"
+          />
+          <h3
+            class="mt-2 text-sm font-semibold text-neutral-900 dark:text-white"
+          >
+            無啟用中的連線實體
+          </h3>
+          <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
+            點擊上方按鈕立即配置一組新的獨立 WebSocket 資源。
+          </p>
+        </div>
+      </div>
     </ClientOnly>
   </div>
 </template>
@@ -180,7 +181,7 @@
 import { ref } from "vue";
 
 useSeoMeta({
-  title: "WebSocket 管理介面 - 註冊中心",
+  title: "WebSocket 實體管理 | OpenWebSocket",
 });
 
 const loading = ref(false);
@@ -207,14 +208,14 @@ async function generateUser() {
     }
     result.value = await res.json();
     toast.add({
-      title: "建立成功",
-      description: "已分配獨立的 WebSocket 房間與鑑權金鑰。",
+      title: "配置成功",
+      description: "實體資源已建立並同步至 Cloudflare KV。",
       color: "success",
       icon: "i-lucide-check-circle",
     });
   } catch (err: any) {
     errorMsg.value =
-      err.message || "無法連接伺服器，請確認網路環境或 Wrangler 狀態。";
+      err.message || "無法連接伺服器，請確認 Wrangler 環境狀態。";
   } finally {
     loading.value = false;
   }
@@ -224,13 +225,13 @@ async function copyText(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     toast.add({
-      title: "已複製到剪貼簿",
+      title: "已複製",
       icon: "i-lucide-clipboard-check",
       color: "success",
     });
   } catch (e) {
     toast.add({
-      title: "複製失敗，您的瀏覽器可能阻擋了此操作",
+      title: "複製失敗",
       color: "error",
       icon: "i-lucide-alert-circle",
     });
