@@ -53,13 +53,42 @@ node test.js
 ## 佈署至 Cloudflare (Workers)
 
 本專案使用 `wrangler.toml` 進行環境設定，無需再手動設定 `wrangler.jsonc`。
+佈署只需要三個簡單的步驟：
 
-1. 修改 `wrangler.toml`，確認對應的 `id`（KV Namespace）正確。
-2. 編譯後端產物：`npm run build`
-3. 執行佈署指令：
-   ```bash
-   npx wrangler deploy
-   ```
+### 1. 準備工作與授權
+
+確保您的終端機已登入並授權存取您的 Cloudflare 帳戶：
+
+```bash
+npx wrangler login
+```
+
+如果您尚未建立專屬的 KV Namespace (用於存放 Token)，請先建立一個新的：
+
+```bash
+npx wrangler kv:namespace create RELAY_AUTH_STORE
+```
+
+執行後，請將終端機回報的 `id = "..."` 填入 `wrangler.toml` 中的 `[[kv_namespaces]]` 區塊取代舊有的 id。
+
+### 2. 編譯大包 (Build)
+
+將 Nuxt Vue 前端與 Server API 合併壓製成可發佈的 Worker 腳本 (`.output` 目錄)：
+
+```bash
+npm run build
+```
+
+### 3. 發佈上線 (Deploy)
+
+執行推播指令：
+
+```bash
+npx wrangler deploy
+```
+
+執行完畢後，Wrangler 會自動為您註冊 `RelayHub` (Durable Object) 並分配一個類似 `https://websocket-relay.<user>.workers.dev` 的線上網址。
+開啟該網址下的 `/admin`，即可開始建立並管理您的專屬通訊房間！
 
 ## 注意事項
 
