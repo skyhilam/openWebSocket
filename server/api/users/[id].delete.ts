@@ -21,7 +21,9 @@ export default defineEventHandler(async (event) => {
 
   try {
     const key = `user:${id}`;
+    console.log(`[DELETE API] Request to delete key: "${key}"`);
     await kvStore.delete(key);
+    console.log(`[DELETE API] Successfully awaited kvStore.delete("${key}")`);
     return { success: true };
   } catch (error) {
     throw createError({ statusCode: 500, statusMessage: "刪除失敗：無法從 KV 刪除金鑰", cause: error });
