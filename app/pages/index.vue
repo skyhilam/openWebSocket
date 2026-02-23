@@ -12,15 +12,8 @@
       <p class="text-gray-500 my-4">這是 WebSocket 多租戶中繼站的根目錄。</p>
 
       <template #footer>
-        <UButton
-          to="/admin"
-          block
-          color="neutral"
-          variant="soft"
-          target="_self"
-          external
-        >
-          前往管理介面 (需驗證)
+        <UButton to="/admin" block color="neutral" variant="soft">
+          前往管理介面
         </UButton>
       </template>
     </UCard>
