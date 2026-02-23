@@ -8,5 +8,13 @@ export default defineNuxtConfig({
   nitro: {
     preset: 'cloudflare-module',
   },
-  devtools: { enabled: true }
+  devtools: { enabled: true },
+  vite: {
+    server: {
+      hmr: {
+        protocol: 'ws',
+        host: 'localhost',
+      }
+    }
+  }
 })
