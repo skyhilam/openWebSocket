@@ -25,10 +25,11 @@ export default defineEventHandler(async (event) => {
         const id = keyObj.name.replace('user:', '');
         const valStr = await kvStore.get(keyObj.name);
         
-        let data = { token: 'unknown', createdAt: 'unknown' };
+        let data: any = { token: 'unknown', createdAt: 'unknown' };
         if (valStr) {
           try {
-            data = JSON.parse(valStr);
+            const parsed = JSON.parse(valStr);
+            data = { ...data, ...parsed }; // 保留預設值，避免無該屬性
           } catch (e) {
             // parsing error fallback
           }

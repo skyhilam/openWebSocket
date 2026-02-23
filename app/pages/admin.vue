@@ -221,7 +221,9 @@
             <template #token-cell="{ row }">
               <div class="flex items-center gap-2">
                 <span class="font-mono text-xs text-neutral-500"
-                  >{{ (row as any).token.substring(0, 8) }}...</span
+                  >{{
+                    String((row as any).token || "unknown").substring(0, 8)
+                  }}...</span
                 >
                 <UButton
                   icon="i-lucide-copy"
