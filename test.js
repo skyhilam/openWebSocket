@@ -1,16 +1,16 @@
 import WebSocket from 'ws';
 
-const baseUrl = 'ws://127.0.0.1:8788';
+const baseUrl = 'ws://127.0.0.1:8787';
 
 async function runTest() {
   console.log("=== 正在註冊 User A ===");
-  const resA = await fetch('http://127.0.0.1:8788/api/users', { method: 'POST' });
+  const resA = await fetch(baseUrl +'/api/users', { method: 'POST' });
   if (!resA.ok) throw new Error(`Registration failed A: ${resA.status} ${await resA.text()}`);
   const userA = await resA.json();
   console.log("User A:", userA.userId);
 
   console.log("=== 正在註冊 User B ===");
-  const resB = await fetch('http://127.0.0.1:8788/api/users', { method: 'POST' });
+  const resB = await fetch(baseUrl +'/api/users', { method: 'POST' });
   if (!resB.ok) throw new Error(`Registration failed B: ${resB.status} ${await resB.text()}`);
   const userB = await resB.json();
   console.log("User B:", userB.userId);

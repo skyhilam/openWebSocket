@@ -173,16 +173,115 @@
           </p>
         </div>
       </div>
+
+      <!-- Users List Section -->
+      <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 pb-10">
+        <div class="sm:flex sm:items-center">
+          <div class="sm:flex-auto">
+            <h1
+              class="text-base font-semibold leading-6 text-neutral-900 dark:text-white"
+            >
+              已配置實體列表
+            </h1>
+            <p class="mt-2 text-sm text-neutral-700 dark:text-neutral-400">
+              顯示 Cloudflare KV 中所有活躍的 WebSocket 房間。共計
+              <span class="font-bold">{{ usersData?.totalActive || 0 }}</span>
+              個。
+            </p>
+          </div>
+          <div class="mt-4 sm:ml-16 sm:mt-0 sm:flex-none">
+            <UButton
+              icon="i-lucide-refresh-cw"
+              color="neutral"
+              variant="soft"
+              size="sm"
+              @click="fetchUsers"
+              :loading="loadingUsers"
+            >
+              重新整理
+            </UButton>
+          </div>
+        </div>
+
+        <div
+          class="mt-6 bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 sm:rounded-lg overflow-x-auto"
+        >
+          <UTable
+            :loading="loadingUsers"
+            :data="usersData?.users || []"
+            :columns="columns"
+            class="min-w-full"
+            :ui="{
+              th: 'bg-neutral-50 dark:bg-neutral-800/50 text-neutral-900 dark:text-white font-semibold',
+            }"
+          >
+            <template #id-cell="{ row }">
+              <span class="font-mono text-xs">{{ (row as any).id }}</span>
+            </template>
+            <template #token-cell="{ row }">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs text-neutral-500"
+                  >{{ (row as any).token.substring(0, 8) }}...</span
+                >
+                <UButton
+                  icon="i-lucide-copy"
+                  size="xs"
+                  color="neutral"
+                  variant="ghost"
+                  @click="copyText((row as any).token)"
+                  title="複製完整 Token"
+                />
+              </div>
+            </template>
+            <template #createdAt-cell="{ row }">
+              <span class="text-xs">{{
+                (row as any).createdAt !== "unknown"
+                  ? new Date((row as any).createdAt).toLocaleString()
+                  : "未知"
+              }}</span>
+            </template>
+            <template #actions-cell="{ row }">
+              <div class="text-right">
+                <UButton
+                  icon="i-lucide-trash-2"
+                  color="error"
+                  variant="ghost"
+                  size="xs"
+                  @click="deleteUser((row as any).id)"
+                  :loading="deletingId === (row as any).id"
+                />
+              </div>
+            </template>
+            <template #empty>
+              <div class="flex flex-col items-center justify-center py-12">
+                <UIcon
+                  name="i-lucide-inbox"
+                  class="w-12 h-12 text-neutral-300 dark:text-neutral-600 mb-4"
+                />
+                <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                  目前沒有任何實體資料
+                </p>
+              </div>
+            </template>
+          </UTable>
+        </div>
+      </div>
     </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 
 useSeoMeta({
   title: "WebSocket 實體管理 | OpenWebSocket",
 });
+
+interface UserRow {
+  id: string;
+  token: string;
+  createdAt: string;
+}
 
 const loading = ref(false);
 const result = ref<{
@@ -193,6 +292,18 @@ const result = ref<{
 } | null>(null);
 const errorMsg = ref("");
 const toast = useToast();
+
+// Users List State
+const loadingUsers = ref(false);
+const deletingId = ref<string | null>(null);
+const usersData = ref<{ totalActive: number; users: UserRow[] } | null>(null);
+
+const columns: any[] = [
+  { accessorKey: "id", header: "房間 ID", id: "id" },
+  { accessorKey: "token", header: "存取金鑰", id: "token" },
+  { accessorKey: "createdAt", header: "建立時間", id: "createdAt" },
+  { id: "actions", header: "操作" },
+];
 
 async function generateUser() {
   loading.value = true;
@@ -213,11 +324,61 @@ async function generateUser() {
       color: "success",
       icon: "i-lucide-check-circle",
     });
+    // 建立成功後重新整理列表
+    fetchUsers();
   } catch (err: any) {
     errorMsg.value =
       err.message || "無法連接伺服器，請確認 Wrangler 環境狀態。";
   } finally {
     loading.value = false;
+  }
+}
+
+async function fetchUsers() {
+  loadingUsers.value = true;
+  try {
+    const res = await fetch("/api/users");
+    if (res.ok) {
+      usersData.value = await res.json();
+    }
+  } catch (e) {
+    console.error("Failed to fetch users", e);
+  } finally {
+    loadingUsers.value = false;
+  }
+}
+
+async function deleteUser(id: string) {
+  if (!confirm(`確定要刪除房間 ${id} 嗎？這將導致使用該金鑰的連線立即失效。`))
+    return;
+
+  deletingId.value = id;
+  try {
+    const res = await fetch(`/api/users/${id}`, { method: "DELETE" });
+    if (!res.ok) throw new Error(await res.text());
+
+    toast.add({
+      title: "刪除成功",
+      description: `房間 ${id} 已被移除。`,
+      color: "success",
+      icon: "i-lucide-trash-2",
+    });
+
+    // 如果刪除的剛好是剛建立正在顯示的那個，就清空上方顯示
+    if (result.value?.userId === id) {
+      result.value = null;
+    }
+
+    fetchUsers();
+  } catch (e: any) {
+    toast.add({
+      title: "刪除失敗",
+      description: e.message,
+      color: "error",
+      icon: "i-lucide-alert-circle",
+    });
+  } finally {
+    deletingId.value = null;
   }
 }
 
@@ -237,4 +398,8 @@ async function copyText(text: string) {
     });
   }
 }
+
+onMounted(() => {
+  fetchUsers();
+});
 </script>

@@ -20,8 +20,4 @@
   </div>
 </template>
 
-<script setup lang="ts">
-definePageMeta({
-  redirect: "/admin",
-});
-</script>
+<script setup lang="ts"></script>
