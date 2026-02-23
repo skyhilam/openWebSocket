@@ -44,21 +44,21 @@
             v-if="result"
             class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800"
           >
-            <UFormGroup label="User ID (房間 ID)">
+            <UFormField label="User ID (房間 ID)">
               <UInput
                 :model-value="result.userId"
                 readonly
                 icon="i-heroicons-identification"
               />
-            </UFormGroup>
-            <UFormGroup label="安全 Token (金鑰)">
+            </UFormField>
+            <UFormField label="安全 Token (金鑰)">
               <UInput
                 :model-value="result.token"
                 readonly
                 type="password"
                 icon="i-heroicons-key"
               />
-            </UFormGroup>
+            </UFormField>
 
             <div class="mt-6 flex flex-col gap-3">
               <UButton
