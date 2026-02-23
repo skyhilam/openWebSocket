@@ -346,9 +346,16 @@ async function fetchUsers() {
   try {
     // 加上時間戳以避免瀏覽器對 GET request 的無條件快取
     const res = await fetch(`/api/users?t=${Date.now()}`);
-    if (res.ok) {
-      usersData.value = await res.json();
+
+    // 如果 Cloudflare Access 擋下請求，通常會回傳 401, 403 或是 HTML (200 OK 登入頁)
+    const contentType = res.headers.get("content-type") || "";
+    if (!res.ok || contentType.includes("text/html")) {
+      console.warn("未授權或遇到 Cloudflare Access 攔截，準備重啟頁面驗證...");
+      window.location.reload(); // 強制觸發真實請求給 Cloudflare
+      return;
     }
+
+    usersData.value = await res.json();
   } catch (e) {
     console.error("Failed to fetch users", e);
   } finally {
