@@ -1,9 +1,20 @@
 export default defineEventHandler(async (event) => {
   // Access KV from nitro context
-  const env = event.context.cloudflare.env;
-  
-  if (!env || !env.RELAY_AUTH_STORE) {
-    throw createError({ statusCode: 500, statusMessage: "KV Store not available" });
+  const cloudflare = event.context.cloudflare;
+  let kvStore = cloudflare?.env?.RELAY_AUTH_STORE;
+
+  if (!kvStore) {
+    if (process.dev) {
+      // 本地純 Nuxt dev 環境降級 (無 Wrangler 時)
+      console.warn('[DEV] Cloudflare KV (RELAY_AUTH_STORE) 未綁定！現已降級為暫時性記憶體寫入，僅供前端開發測試。');
+      kvStore = {
+        put: async (key: string, value: string) => {
+          console.log(`[Mock KV] Saved ${key} => ${value}`);
+        }
+      };
+    } else {
+      throw createError({ statusCode: 500, statusMessage: "KV Store binding (RELAY_AUTH_STORE) is missing in production" });
+    }
   }
 
   const newUserId = crypto.randomUUID();
@@ -14,7 +25,7 @@ export default defineEventHandler(async (event) => {
     createdAt: new Date().toISOString()
   };
 
-  await env.RELAY_AUTH_STORE.put(`user:${newUserId}`, JSON.stringify(record));
+  await kvStore.put(`user:${newUserId}`, JSON.stringify(record));
 
   const host = getRequestHeader(event, 'host');
   // Usually the proxy adds x-forwarded-proto, else we assume wss in production
