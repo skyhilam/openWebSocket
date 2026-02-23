@@ -216,13 +216,18 @@
             }"
           >
             <template #id-cell="{ row }">
-              <span class="font-mono text-xs">{{ (row as any).id }}</span>
+              <span class="font-mono text-xs">{{
+                (row.original as any).id
+              }}</span>
             </template>
             <template #token-cell="{ row }">
               <div class="flex items-center gap-2">
                 <span class="font-mono text-xs text-neutral-500"
                   >{{
-                    String((row as any).token || "unknown").substring(0, 8)
+                    String((row.original as any).token || "unknown").substring(
+                      0,
+                      8,
+                    )
                   }}...</span
                 >
                 <UButton
@@ -230,15 +235,15 @@
                   size="xs"
                   color="neutral"
                   variant="ghost"
-                  @click="copyText((row as any).token)"
+                  @click="copyText((row.original as any).token)"
                   title="複製完整 Token"
                 />
               </div>
             </template>
             <template #createdAt-cell="{ row }">
               <span class="text-xs">{{
-                (row as any).createdAt !== "unknown"
-                  ? new Date((row as any).createdAt).toLocaleString()
+                (row.original as any).createdAt !== "unknown"
+                  ? new Date((row.original as any).createdAt).toLocaleString()
                   : "未知"
               }}</span>
             </template>
@@ -249,8 +254,8 @@
                   color="error"
                   variant="ghost"
                   size="xs"
-                  @click="deleteUser((row as any).id)"
-                  :loading="deletingId === (row as any).id"
+                  @click="deleteUser((row.original as any).id)"
+                  :loading="deletingId === (row.original as any).id"
                 />
               </div>
             </template>
