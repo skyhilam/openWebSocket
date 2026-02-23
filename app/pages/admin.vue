@@ -1,89 +1,91 @@
 <template>
-  <ClientOnly>
-    <UContainer class="py-12 max-w-2xl">
-      <UCard>
-        <template #header>
-          <div class="flex items-center gap-3">
-            <UIcon
-              name="i-heroicons-shield-check"
-              class="w-8 h-8 text-primary"
+  <div>
+    <ClientOnly>
+      <UContainer class="py-12 max-w-2xl">
+        <UCard>
+          <template #header>
+            <div class="flex items-center gap-3">
+              <UIcon
+                name="i-heroicons-shield-check"
+                class="w-8 h-8 text-primary"
+              />
+              <h2 class="text-2xl font-bold leading-tight">
+                多租戶 WebSocket 註冊中心
+              </h2>
+            </div>
+          </template>
+
+          <div class="space-y-6">
+            <p class="text-gray-600 dark:text-gray-300">
+              在此處建立專屬的連線身份。為了物理隔離不同的通訊數據，每個身份會對應一個獨立的
+              Durable Object 房間。
+            </p>
+
+            <UButton
+              size="lg"
+              block
+              icon="i-heroicons-plus-circle"
+              color="primary"
+              :loading="loading"
+              @click="generateUser"
+            >
+              {{ loading ? "分配資源中..." : "建立新使用者" }}
+            </UButton>
+
+            <UAlert
+              v-if="errorMsg"
+              icon="i-heroicons-exclamation-triangle"
+              color="error"
+              variant="soft"
+              title="錯誤"
+              :description="errorMsg"
             />
-            <h2 class="text-2xl font-bold leading-tight">
-              多租戶 WebSocket 註冊中心
-            </h2>
-          </div>
-        </template>
 
-        <div class="space-y-6">
-          <p class="text-gray-600 dark:text-gray-300">
-            在此處建立專屬的連線身份。為了物理隔離不同的通訊數據，每個身份會對應一個獨立的
-            Durable Object 房間。
-          </p>
+            <div
+              v-if="result"
+              class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800"
+            >
+              <UFormField label="User ID (房間 ID)">
+                <UInput
+                  :model-value="result.userId"
+                  readonly
+                  icon="i-heroicons-identification"
+                />
+              </UFormField>
+              <UFormField label="安全 Token (金鑰)">
+                <UInput
+                  :model-value="result.token"
+                  readonly
+                  type="password"
+                  icon="i-heroicons-key"
+                />
+              </UFormField>
 
-          <UButton
-            size="lg"
-            block
-            icon="i-heroicons-plus-circle"
-            color="primary"
-            :loading="loading"
-            @click="generateUser"
-          >
-            {{ loading ? "分配資源中..." : "建立新使用者" }}
-          </UButton>
+              <div class="mt-6 flex flex-col gap-3">
+                <UButton
+                  color="neutral"
+                  variant="solid"
+                  icon="i-heroicons-clipboard-document"
+                  @click="copyText(result.hostUrl)"
+                >
+                  複製 Host (Docker端) 對接網址
+                </UButton>
 
-          <UAlert
-            v-if="errorMsg"
-            icon="i-heroicons-exclamation-triangle"
-            color="error"
-            variant="soft"
-            title="錯誤"
-            :description="errorMsg"
-          />
-
-          <div
-            v-if="result"
-            class="space-y-4 pt-4 border-t border-gray-200 dark:border-gray-800"
-          >
-            <UFormField label="User ID (房間 ID)">
-              <UInput
-                :model-value="result.userId"
-                readonly
-                icon="i-heroicons-identification"
-              />
-            </UFormField>
-            <UFormField label="安全 Token (金鑰)">
-              <UInput
-                :model-value="result.token"
-                readonly
-                type="password"
-                icon="i-heroicons-key"
-              />
-            </UFormField>
-
-            <div class="mt-6 flex flex-col gap-3">
-              <UButton
-                color="neutral"
-                variant="solid"
-                icon="i-heroicons-clipboard-document"
-                @click="copyText(result.hostUrl)"
-              >
-                複製 Host (Docker端) 對接網址
-              </UButton>
-
-              <UButton
-                color="neutral"
-                variant="solid"
-                icon="i-heroicons-clipboard-document-check"
-                @click="copyText(result.clientUrl)"
-              >
-                複製 Client (雲端) 對接網址
-              </UButton>
+                <UButton
+                  color="neutral"
+                  variant="solid"
+                  icon="i-heroicons-clipboard-document-check"
+                  @click="copyText(result.clientUrl)"
+                >
+                  複製 Client (雲端) 對接網址
+                </UButton>
+              </div>
             </div>
           </div>
-        </div>
-      </UCard>
-    </UContainer>
-  </ClientOnly>
+        </UCard>
+      </UContainer>
+    </ClientOnly>
+  </div>
 </template>
 
 <script setup lang="ts">
