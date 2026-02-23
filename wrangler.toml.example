@@ -1,0 +1,20 @@
+name = "websocket-relay"
+main = "worker.ts"
+compatibility_date = "2024-05-29"
+compatibility_flags = ["nodejs_compat"]
+
+[site]
+bucket = ".output/public"
+
+[[kv_namespaces]]
+binding = "RELAY_AUTH_STORE"
+id = "<YOUR_KV_NAMESPACE_ID>"
+preview_id = "<YOUR_PREVIEW_KV_NAMESPACE_ID>"
+
+[[durable_objects.bindings]]
+name = "RELAY_HUB"
+class_name = "RelayHub"
+
+[[migrations]]
+tag = "v1"
+new_classes = ["RelayHub"]
