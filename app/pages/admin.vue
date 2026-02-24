@@ -248,7 +248,30 @@
               }}</span>
             </template>
             <template #actions-cell="{ row }">
-              <div class="text-right">
+              <div class="flex items-center justify-end gap-1">
+                <UButton
+                  :icon="
+                    activeConsoleId === (row.original as any).id
+                      ? 'i-lucide-terminal'
+                      : 'i-lucide-terminal'
+                  "
+                  :color="
+                    activeConsoleId === (row.original as any).id
+                      ? 'primary'
+                      : 'neutral'
+                  "
+                  variant="ghost"
+                  size="xs"
+                  @click="
+                    toggleConsole(
+                      (row.original as any).id,
+                      (row.original as any).token,
+                    )
+                  "
+                  title="控制台"
+                >
+                  控制台
+                </UButton>
                 <UButton
                   icon="i-lucide-trash-2"
                   color="error"
@@ -272,13 +295,53 @@
             </template>
           </UTable>
         </div>
+
+        <!-- 活躍控制台面板 -->
+        <div
+          v-if="activeConsoleId"
+          class="mt-4 bg-white dark:bg-neutral-900 shadow-sm ring-1 ring-neutral-200 dark:ring-neutral-800 sm:rounded-lg overflow-hidden"
+        >
+          <div
+            class="px-4 py-3 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between"
+          >
+            <div class="flex items-center gap-2">
+              <UIcon name="i-lucide-terminal" class="w-4 h-4" />
+              <span
+                class="text-sm font-semibold text-neutral-900 dark:text-white"
+              >
+                控制台
+              </span>
+              <span class="font-mono text-xs text-neutral-500">
+                {{ activeConsoleId }}
+              </span>
+            </div>
+            <UButton
+              icon="i-lucide-x"
+              size="xs"
+              color="neutral"
+              variant="ghost"
+              @click="closeConsole"
+            />
+          </div>
+          <RoomConsole
+            :connected="consoleConnected"
+            :connecting="consoleConnecting"
+            :messages="consoleMessages"
+            :online-clients="consoleOnlineClients"
+            @connect="consoleConnect(activeConsoleId!, activeConsoleToken!)"
+            @disconnect="consoleDisconnect()"
+            @clear="consoleClearMessages()"
+            @send="handleConsoleSend"
+          />
+        </div>
       </div>
     </ClientOnly>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, onMounted, onBeforeUnmount } from "vue";
+import { useRoomConsole } from "~/composables/useRoomConsole";
 
 useSeoMeta({
   title: "WebSocket 實體管理 | OpenWebSocket",
@@ -305,12 +368,52 @@ const loadingUsers = ref(false);
 const deletingId = ref<string | null>(null);
 const usersData = ref<{ totalActive: number; users: UserRow[] } | null>(null);
 
+// 控制台狀態 — 解構為頂層 ref，避免 template 中巢狀 ref 不自動解包
+const activeConsoleId = ref<string | null>(null);
+const activeConsoleToken = ref<string | null>(null);
+const {
+  connected: consoleConnected,
+  connecting: consoleConnecting,
+  messages: consoleMessages,
+  onlineClients: consoleOnlineClients,
+  connect: consoleConnect,
+  disconnect: consoleDisconnect,
+  sendMessage: consoleSendMessage,
+  clearMessages: consoleClearMessages,
+} = useRoomConsole();
+
+function handleConsoleSend(content: string, targetClientId?: string) {
+  consoleSendMessage(content, targetClientId);
+}
+
 const columns: any[] = [
   { accessorKey: "id", header: "房間 ID", id: "id" },
   { accessorKey: "token", header: "存取金鑰", id: "token" },
   { accessorKey: "createdAt", header: "建立時間", id: "createdAt" },
   { id: "actions", header: "操作" },
 ];
+
+function toggleConsole(userId: string, token: string) {
+  if (activeConsoleId.value === userId) {
+    closeConsole();
+    return;
+  }
+  // 先關閉舊連線
+  consoleDisconnect();
+  consoleClearMessages();
+  activeConsoleId.value = userId;
+  activeConsoleToken.value = token;
+}
+
+function closeConsole() {
+  consoleDisconnect();
+  activeConsoleId.value = null;
+  activeConsoleToken.value = null;
+}
+
+onBeforeUnmount(() => {
+  consoleDisconnect();
+});
 
 async function generateUser() {
   loading.value = true;
