@@ -88,6 +88,9 @@
                   複製
                 </button>
               </div>
+              <p class="mt-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+                僅限單一 Host 連線；新連線將取代舊的 Host。
+              </p>
             </dd>
           </div>
 
@@ -119,6 +122,9 @@
                   複製
                 </button>
               </div>
+              <p class="mt-1.5 text-xs text-neutral-400 dark:text-neutral-500">
+                此 URL 可供多個 Client 同時連線，每個連線會自動分配獨立 ID。
+              </p>
             </dd>
           </div>
         </dl>

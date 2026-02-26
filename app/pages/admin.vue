@@ -58,6 +58,8 @@
         @console-clear="consoleClearMessages"
         @console-send="handleConsoleSend"
       />
+
+      <AdminTechGuide />
     </ClientOnly>
   </div>
 </template>
