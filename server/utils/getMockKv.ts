@@ -1,18 +1,35 @@
+import { createStorage } from 'unstorage';
+import fsLiteDriver from 'unstorage/drivers/fs-lite';
+
+let mockKvStorage: ReturnType<typeof createStorage> | null = null;
+
 export function getMockKv() {
-  const g = globalThis as any;
-  if (!g.__MOCK_KV__) {
-    g.__MOCK_KV__ = new Map<string, string>();
+  if (!mockKvStorage) {
+    mockKvStorage = createStorage({
+      driver: fsLiteDriver({ base: './.data/mock-kv' })
+    });
   }
   
-  const map = g.__MOCK_KV__ as Map<string, string>;
+  const storage = mockKvStorage;
 
   return {
-    get: async (key: string) => map.get(key) || null,
-    put: async (key: string, value: string) => { map.set(key, value); },
-    delete: async (key: string) => { map.delete(key); },
+    get: async (key: string) => {
+      const val = await storage.getItem(key);
+      if (val === null || val === undefined) return null;
+      // unstorage autoconverts JSON if valid, but existing code expects string
+      return typeof val === 'string' ? val : JSON.stringify(val);
+    },
+    put: async (key: string, value: string) => { 
+      await storage.setItem(key, value); 
+    },
+    delete: async (key: string) => { 
+      await storage.removeItem(key); 
+    },
     list: async (options?: { prefix?: string }) => {
+      const allKeys = await storage.getKeys();
       const keys = [];
-      for (const key of map.keys()) {
+      for (const key of allKeys) {
+        // Replace unstorage's internal `:` conversion if any, although unstorage usually keeps `:` in the key returned by getKeys()
         if (!options?.prefix || key.startsWith(options.prefix)) {
           keys.push({ name: key });
         }

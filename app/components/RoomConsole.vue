@@ -65,7 +65,7 @@
       <div
         v-for="msg in messages"
         :key="msg.id"
-        class="flex gap-2"
+        class="group flex items-start gap-2"
         :class="{
           'text-neutral-400 dark:text-neutral-500 italic':
             msg.direction === 'system',
@@ -86,7 +86,14 @@
           </template>
           <template v-else> → {{ msg.clientId }} </template>
         </span>
-        <span class="break-all">{{ msg.content }}</span>
+        <span class="break-all flex-1">{{ msg.content }}</span>
+        <button
+          class="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity p-0.5 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-300 cursor-pointer"
+          title="複製訊息"
+          @click="copyMessage(msg.content)"
+        >
+          <UIcon name="i-lucide-copy" class="w-3.5 h-3.5" />
+        </button>
       </div>
     </div>
 
@@ -153,6 +160,23 @@ function handleSend() {
 
   emit("send", text, selectedClient.value || undefined);
   inputText.value = "";
+}
+
+async function copyMessage(content: string) {
+  try {
+    await navigator.clipboard.writeText(content);
+    useToast().add({
+      title: "已複製",
+      icon: "i-lucide-clipboard-check",
+      color: "success",
+    });
+  } catch {
+    useToast().add({
+      title: "複製失敗",
+      color: "error",
+      icon: "i-lucide-alert-circle",
+    });
+  }
 }
 
 // 訊息更新時自動捲到底部
