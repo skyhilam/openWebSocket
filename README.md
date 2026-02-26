@@ -114,6 +114,11 @@ npx wrangler deploy
 
 設定完成後，當任何人試圖存取 `https://<您的網址>/admin` 或 API 時，都會被要求登入並驗證 OTP。
 
+## 連接文件
+
+- **[Host 端連接指南](./HOST.md)** — 控制台 / 伺服器端如何連線、接收 Client 訊息、廣播與定向發送
+- **[Client 端連接指南](./CLIENT.md)** — 終端裝置 / 應用程式端如何連線、發送與接收訊息
+
 ## 注意事項
 
 - 本專案沒有實體資料庫，權限管控依靠 **Cloudflare KV** 作 Token 驗證。
